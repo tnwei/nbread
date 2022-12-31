@@ -12,29 +12,32 @@ Installation: `pipx install g+https://github.com/tnwei/nbread`.
 
 Do the following for `ranger` integration:
 
-Enabling panel preview when a notebook is highlighted: modify `~/.config/ranger/scope.sh`:
+If your `~/.config/ranger/` dir is empty, run `ranger --copy-config=all` to populate it w/ the defaults.
+
+Enabling panel preview when a notebook is highlighted: modify `handle_extension()` in `~/.config/ranger/scope.sh`:
 
 ```bash
-case "$extension" in
-    ### INSERT START
-    ipynb)
-    ¦   # Jupyter notebook previewer
-        nbread "$path" --forcecolor && { dump | trim; exit 5; } || exit 2;;
-    ### INSERT END
+handle_extension(){
+    case "${FILE_EXTENSION_LOWER}" in
+        ### INSERT START
+        ipynb)
+        ¦   # Jupyter notebook previewer
+            nbread "${FILE_PATH}" --forcecolor && { dump | trim; exit 5; } || exit 2;;
+        ### INSERT END
 
-    # Archive extensions:
+        # Archive extensions:
 ```
 
-Enabling fullscreen preview in terminal when a notebook is selected: modify `~/.config/ranger/rifle.conf`:
+Enabling fullscreen preview in terminal when a notebook is selected: add the following to `~/.config/ranger/rifle.conf`:
 
 ```
 ### INSERT START
 # Jupyter notebooks
-ext ipynb  = nbread --forcecolor "$1" | "$PAGER" -R
+ext ipynb  = nbread --forcecolor "$1" --pager
 ### INSERT END
 ```
 
-Last tested on ranger-stable 1.8.1, requires `less` installed.
+Last tested on ranger 1.9.3, requires `less` installed.
 
 
 

@@ -1,6 +1,9 @@
 import argparse
 
 from typing import Optional, Tuple, Any
+import subprocess
+import sys
+import os
 
 from rich.console import Console, ConsoleOptions, RenderResult, RenderableType
 from rich.markdown import Markdown, TextElement
@@ -46,7 +49,7 @@ def _line_range(
     head: Optional[int], tail: Optional[int], num_lines: int
 ) -> Optional[Tuple[int, int]]:
     if head and tail:
-        on_error("cannot specify both head and tail")
+        raise ValueError("cannot specify both head and tail")
     if head:
         line_range = (1, head)
     elif tail:
@@ -69,11 +72,43 @@ def render_ipynb_jit(
     guides: bool,
     no_wrap: bool,
     force_color: bool,
+    pager: bool,
 ) -> RenderableType:
 
     color_system = "auto"
     if force_color is True:
         color_system = "standard"
+
+    if pager:
+        # Make sure `less` exists
+        if not os.path.exists("/usr/bin/less"):
+            raise FileNotFoundError(
+                "/usr/bin/less not found, either rerun without --pager or install `less`"
+            )
+
+        # Open a subprocess to less
+        proc = subprocess.Popen(
+            [
+                "/usr/bin/less",
+                "-R",  # This is for colour
+                # "-F", # This is for exiting if less than one page, can't use since it blocks less from dumping to stdout
+                "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
+            ],
+            stdin=subprocess.PIPE,
+            text=True,
+            stdout=sys.stdout,
+        )
+
+    def wrapped_print(text):
+        if pager:
+            with console.capture() as capture:
+                console.print(text)
+
+            captured_text = capture.get()
+            proc.stdin.write(captured_text)
+            proc.stdin.flush()
+        else:
+            console.print(text)
 
     console = Console(color_system=color_system)
 
@@ -93,11 +128,11 @@ def render_ipynb_jit(
 
     for cell in notebook_dict["cells"]:
         if new_line:
-            console.print("")
+            wrapped_print("")
 
         if "execution_count" in cell:
             execution_count = cell["execution_count"] or " "
-            console.print(f"[green]In [[#66ff00]{execution_count}[/#66ff00]]:[/green]")
+            wrapped_print(f"[green]In [[#66ff00]{execution_count}[/#66ff00]]:[/green]")
 
         source = "".join(cell["source"])
         if cell["cell_type"] == "code":
@@ -121,7 +156,7 @@ def render_ipynb_jit(
             renderable = Text(source)
         new_line = True
 
-        console.print(renderable)
+        wrapped_print(renderable)
 
         for output in cell.get("outputs", []):
             output_type = output["output_type"]
@@ -145,7 +180,14 @@ def render_ipynb_jit(
             else:
                 continue
 
-            console.print(renderable)
+            wrapped_print(renderable)
+
+    if pager:
+        # Close stdin
+        proc.stdin.close()
+        # Wait for user to be done w/ the pager
+        # W/o this line, stdin bugs out and shows nothing after run
+        proc.wait()
 
     return None
 
@@ -158,9 +200,10 @@ def run():
     )
     parser.add_argument("filename")
     parser.add_argument("--forcecolor", action="store_true", default=False)
+    parser.add_argument("--pager", action="store_true", default=False)
     args = parser.parse_args()
 
-    renderable = render_ipynb_jit(
+    _ = render_ipynb_jit(
         args.filename,
         theme="ansi_dark",
         hyperlinks=False,
@@ -171,6 +214,7 @@ def run():
         guides=False,
         no_wrap=True,
         force_color=args.forcecolor,
+        pager=args.pager,
     )
 
 
