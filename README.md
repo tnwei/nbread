@@ -1,10 +1,15 @@
 # nb-read
 
+Snappy previews of Jupyter notebooks from the command line, with ranger integration.
+
 <p align="center">
   <img width="800" src="https://raw.githubusercontent.com/tnwei/nbread/main/nbread-cast.svg">
 </p>
 
-I'm trying to figure out getting snappy previews of Jupyter notebooks from the command line, and ultimately in `ranger`. Here are my efforts.
+## Use case
+
++ Read notebooks using just the terminal, don't need to spin up a Jupyter Notebook / Lab instance
++ Read superlarge notebooks without chugging Jupyter Notebook / Lab
 
 ## Usage
 
@@ -45,9 +50,7 @@ ext ipynb  = nbread "$1" --pager
 
 Last tested on ranger 1.9.3, requires `less` installed.
 
-
-
 ## Appreciation
 
-Code heavily based on [Textualize/rich-cli](https://github.com/Textualize/rich-cli)'s notebook pretty printing.
+Code heavily based on [Textualize/rich-cli](https://github.com/Textualize/rich-cli)'s notebook pretty printing. This is pretty much `rich <notebook.ipynb>` with some speed tweaks and standalone packaging for convenience.
 
