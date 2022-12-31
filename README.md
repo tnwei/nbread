@@ -1,5 +1,9 @@
 # nb-read
 
+<p align="center">
+  <img width="800" src="https://raw.githubusercontent.com/tnwei/nbread/main/nbread-cast.svg">
+</p>
+
 I'm trying to figure out getting snappy previews of Jupyter notebooks from the command line, and ultimately in `ranger`. Here are my efforts.
 
 ## Usage
