@@ -4,7 +4,9 @@ I'm trying to figure out getting snappy previews of Jupyter notebooks from the c
 
 ## Usage
 
-Run `nbread notebook.ipynb` for notebook preview in terminal, or just use `ranger` as normal..
+Run `nbread notebook.ipynb` for notebook preview in terminal, append `--pager` to pipe to `less`. 
+
+Use `ranger` as normal, and see Jupyter notebook previews in place of the underlying JSON plain text!
 
 ## Setup
 
