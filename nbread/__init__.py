@@ -72,13 +72,8 @@ def render_ipynb_jit(
     line_numbers: bool,
     guides: bool,
     no_wrap: bool,
-    force_color: bool,
     pager: bool,
 ) -> RenderableType:
-
-    color_system = "auto"
-    if force_color is True:
-        color_system = "standard"
 
     try:
         if pager:
@@ -114,6 +109,8 @@ def render_ipynb_jit(
                     proc.terminate()
                     proc.wait()
 
+        console = Console(color_system="auto")
+
         def wrapped_print(text):
             if pager:
                 with console.capture() as capture:
@@ -124,8 +121,6 @@ def render_ipynb_jit(
                 proc.stdin.flush()
             else:
                 console.print(text)
-
-        console = Console(color_system=color_system)
 
         import json
         from rich.syntax import Syntax
@@ -233,7 +228,6 @@ def run():
         # epilog = 'Text at the bottom of help'
     )
     parser.add_argument("filename")
-    parser.add_argument("--forcecolor", action="store_true", default=False)
     parser.add_argument("--pager", action="store_true", default=False)
     args = parser.parse_args()
 
@@ -247,7 +241,6 @@ def run():
         line_numbers=False,
         guides=False,
         no_wrap=True,
-        force_color=args.forcecolor,
         pager=args.pager,
     )
 

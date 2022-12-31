@@ -24,7 +24,7 @@ handle_extension(){
         ### INSERT START
         ipynb)
         ¦   # Jupyter notebook previewer
-            nbread "${FILE_PATH}" --forcecolor && { dump | trim; exit 5; } || exit 2;;
+            nbread "${FILE_PATH}" && { dump | trim; exit 5; } || exit 2;;
         ### INSERT END
 
         # Archive extensions:
@@ -35,7 +35,7 @@ Enabling fullscreen preview in terminal when a notebook is selected: add the fol
 ```
 ### INSERT START
 # Jupyter notebooks
-ext ipynb  = nbread --forcecolor "$1" --pager
+ext ipynb  = nbread "$1" --pager
 ### INSERT END
 ```
 
