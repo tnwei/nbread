@@ -4,6 +4,7 @@ from typing import Optional, Tuple, Any
 import subprocess
 import sys
 import os
+import traceback
 
 from rich.console import Console, ConsoleOptions, RenderResult, RenderableType
 from rich.markdown import Markdown, TextElement
@@ -79,115 +80,126 @@ def render_ipynb_jit(
     if force_color is True:
         color_system = "standard"
 
-    if pager:
-        # Make sure `less` exists
-        if not os.path.exists("/usr/bin/less"):
-            raise FileNotFoundError(
-                "/usr/bin/less not found, either rerun without --pager or install `less`"
+    try:
+        if pager:
+            # Make sure `less` exists
+            if not os.path.exists("/usr/bin/less"):
+                raise FileNotFoundError(
+                    "/usr/bin/less not found, either rerun without --pager or install `less`"
+                )
+
+            # Open a subprocess to less
+            proc = subprocess.Popen(
+                [
+                    "/usr/bin/less",
+                    "-R",  # This is for colour
+                    # "-F", # This is for exiting if less than one page, can't use since it blocks less from dumping to stdout
+                    "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
+                ],
+                stdin=subprocess.PIPE,
+                text=True,
+                stdout=sys.stdout,
             )
 
-        # Open a subprocess to less
-        proc = subprocess.Popen(
-            [
-                "/usr/bin/less",
-                "-R",  # This is for colour
-                # "-F", # This is for exiting if less than one page, can't use since it blocks less from dumping to stdout
-                "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
-            ],
-            stdin=subprocess.PIPE,
-            text=True,
-            stdout=sys.stdout,
-        )
+        def wrapped_print(text):
+            if pager:
+                with console.capture() as capture:
+                    console.print(text)
 
-    def wrapped_print(text):
-        if pager:
-            with console.capture() as capture:
+                captured_text = capture.get()
+                proc.stdin.write(captured_text)
+                proc.stdin.flush()
+            else:
                 console.print(text)
 
-            captured_text = capture.get()
-            proc.stdin.write(captured_text)
-            proc.stdin.flush()
-        else:
-            console.print(text)
+        console = Console(color_system=color_system)
 
-    console = Console(color_system=color_system)
+        import json
+        from rich.syntax import Syntax
+        from rich.console import Group
+        from rich.panel import Panel
 
-    import json
-    from rich.syntax import Syntax
-    from rich.console import Group
-    from rich.panel import Panel
+        notebook_str = read_resource(resource)
+        notebook_dict = json.loads(notebook_str)
+        lexer = lexer or notebook_dict.get("metadata", {}).get("kernelspec", {}).get(
+            "language", ""
+        )
 
-    notebook_str = read_resource(resource)
-    notebook_dict = json.loads(notebook_str)
-    lexer = lexer or notebook_dict.get("metadata", {}).get("kernelspec", {}).get(
-        "language", ""
-    )
-
-    renderable: RenderableType
-    new_line = True
-
-    for cell in notebook_dict["cells"]:
-        if new_line:
-            wrapped_print("")
-
-        if "execution_count" in cell:
-            execution_count = cell["execution_count"] or " "
-            wrapped_print(f"[green]In [[#66ff00]{execution_count}[/#66ff00]]:[/green]")
-
-        source = "".join(cell["source"])
-        if cell["cell_type"] == "code":
-            num_lines = len(source.splitlines())
-            line_range = _line_range(head, tail, num_lines)
-            renderable = Panel(
-                Syntax(
-                    source,
-                    lexer,
-                    theme=theme,
-                    line_numbers=line_numbers,
-                    indent_guides=guides,
-                    word_wrap=not no_wrap,
-                    line_range=line_range,
-                ),
-                border_style="dim",
-            )
-        elif cell["cell_type"] == "markdown":
-            renderable = Markdown(source, code_theme=theme, hyperlinks=hyperlinks)
-        else:
-            renderable = Text(source)
+        renderable: RenderableType
         new_line = True
 
-        wrapped_print(renderable)
+        for cell in notebook_dict["cells"]:
+            if new_line:
+                wrapped_print("")
 
-        for output in cell.get("outputs", []):
-            output_type = output["output_type"]
-            if output_type == "stream":
-                renderable = Text.from_ansi("".join(output["text"]))
-                new_line = False
-            elif output_type == "error":
-                renderable = Text.from_ansi("\n".join(output["traceback"]).rstrip())
-                new_line = True
-            elif output_type == "execute_result":
-                execution_count = output.get("execution_count", " ") or " "
-                renderable = Text.from_markup(
-                    f"[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
+            if "execution_count" in cell:
+                execution_count = cell["execution_count"] or " "
+                wrapped_print(
+                    f"[green]In [[#66ff00]{execution_count}[/#66ff00]]:[/green]"
                 )
-                data = output["data"].get("text/plain", "")
-                if isinstance(data, list):
-                    renderable += Text.from_ansi("".join(data))
-                else:
-                    renderable += Text.from_ansi(data)
-                new_line = True
+
+            source = "".join(cell["source"])
+            if cell["cell_type"] == "code":
+                num_lines = len(source.splitlines())
+                line_range = _line_range(head, tail, num_lines)
+                renderable = Panel(
+                    Syntax(
+                        source,
+                        lexer,
+                        theme=theme,
+                        line_numbers=line_numbers,
+                        indent_guides=guides,
+                        word_wrap=not no_wrap,
+                        line_range=line_range,
+                    ),
+                    border_style="dim",
+                )
+            elif cell["cell_type"] == "markdown":
+                renderable = Markdown(source, code_theme=theme, hyperlinks=hyperlinks)
             else:
-                continue
+                renderable = Text(source)
+            new_line = True
 
             wrapped_print(renderable)
 
-    if pager:
-        # Close stdin
-        proc.stdin.close()
-        # Wait for user to be done w/ the pager
-        # W/o this line, stdin bugs out and shows nothing after run
-        proc.wait()
+            for output in cell.get("outputs", []):
+                output_type = output["output_type"]
+                if output_type == "stream":
+                    renderable = Text.from_ansi("".join(output["text"]))
+                    new_line = False
+                elif output_type == "error":
+                    renderable = Text.from_ansi("\n".join(output["traceback"]).rstrip())
+                    new_line = True
+                elif output_type == "execute_result":
+                    execution_count = output.get("execution_count", " ") or " "
+                    renderable = Text.from_markup(
+                        f"[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
+                    )
+                    data = output["data"].get("text/plain", "")
+                    if isinstance(data, list):
+                        renderable += Text.from_ansi("".join(data))
+                    else:
+                        renderable += Text.from_ansi(data)
+                    new_line = True
+                else:
+                    continue
+
+                wrapped_print(renderable)
+
+        if pager:
+            # Close stdin
+            proc.stdin.close()
+            # Wait for user to be done w/ the pager
+            # W/o this line, stdin bugs out and shows nothing after run
+            proc.wait()
+    except Exception as e:
+        # Print traceback
+        traceback.print_exc()
+        # Wrapped everything in try-except just to clean up pager exit gracefully
+        if pager:
+            proc.stdin.close()
+            proc.terminate()
+            proc.wait()
 
     return None
 
