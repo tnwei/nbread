@@ -101,6 +101,19 @@ def render_ipynb_jit(
                 stdout=sys.stdout,
             )
 
+            def pager_cleanup():
+                try:
+                    # Diving into the intricacies of how this works isn't what I had in mind
+                    # Just gonna follow codein std lib
+                    # ref: https://github.com/python/cpython/blob/b1e314ab9f8c3a2b53c7179674811f9c79328ce7/Lib/subprocess.py#L1039
+                    proc.stdin.close()
+                except OSError:
+                    pass
+
+                if proc.poll() is None:
+                    proc.terminate()
+                    proc.wait()
+
         def wrapped_print(text):
             if pager:
                 with console.capture() as capture:
@@ -192,14 +205,23 @@ def render_ipynb_jit(
             # Wait for user to be done w/ the pager
             # W/o this line, stdin bugs out and shows nothing after run
             proc.wait()
+
+    except BrokenPipeError:
+        # Broken pipe happens if we quit from the pager
+        # Doesn't happen if we've scrolled till end though
+        if pager:
+            pager_cleanup()
+
+    except KeyboardInterrupt:
+        # The pager will handle exit on its own due to the -K flag, no need cleanup
+        pass
+
     except Exception as e:
         # Print traceback
         traceback.print_exc()
         # Wrapped everything in try-except just to clean up pager exit gracefully
         if pager:
-            proc.stdin.close()
-            proc.terminate()
-            proc.wait()
+            pager_cleanup()
 
     return None
 
