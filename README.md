@@ -10,7 +10,7 @@ Use `ranger` as normal, and see Jupyter notebook previews in place of the underl
 
 ## Setup
 
-Installation: `pipx install g+https://github.com/tnwei/nbread`. 
+Installation: `pipx install git+https://github.com/tnwei/nbread`. 
 
 Do the following for `ranger` integration:
 
