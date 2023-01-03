@@ -92,7 +92,7 @@ def render_ipynb_jit(
                     "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
                 ],
                 stdin=subprocess.PIPE,
-                text=True,
+                universal_newlines=True,
                 stdout=sys.stdout,
             )
 
