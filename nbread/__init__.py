@@ -112,6 +112,7 @@ def render_ipynb_jit(
         console = Console(color_system="auto")
 
         def wrapped_print(text):
+            text = Padding(text, (0, 4))
             if pager:
                 with console.capture() as capture:
                     console.print(text)
