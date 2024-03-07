@@ -13,13 +13,27 @@ Snappy previews of Jupyter notebooks from the command line, with ranger integrat
 
 ## Usage
 
-Run `nbread notebook.ipynb` for notebook preview in terminal, append `--pager` to pipe to `less`. 
+Run `nbread notebook.ipynb` for notebook preview in terminal. 
 
-Use `ranger` as normal, and see Jupyter notebook previews in place of the underlying JSON plain text!
+```bash
+$ nbread --help
+usage: nbread [-h] [--paging PAGING] filename
+
+positional arguments:
+  filename
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --paging PAGING  Specify when to use the pager [auto/never/always], defaults to auto
+```
 
 ## Setup
 
 Installation: `pipx install git+https://github.com/tnwei/nbread`. 
+
+## Ranger integration
+
+Use `ranger` as normal, and see Jupyter notebook previews in place of the underlying JSON plain text!
 
 Do the following for `ranger` integration:
 

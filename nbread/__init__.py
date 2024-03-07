@@ -72,29 +72,44 @@ def render_ipynb_jit(
     line_numbers: bool,
     guides: bool,
     no_wrap: bool,
-    pager: bool,
+    paging: str,
 ) -> RenderableType:
-
+    use_pager = True if (paging == "auto") or (paging == "always") else False
     try:
-        if pager:
+        if use_pager is True:
             # Make sure `less` exists
             if not os.path.exists("/usr/bin/less"):
                 raise FileNotFoundError(
-                    "/usr/bin/less not found, either rerun without --pager or install `less`"
+                    "/usr/bin/less not found, either run with `--pager never` or install `less`"
                 )
 
             # Open a subprocess to less
-            proc = subprocess.Popen(
-                [
-                    "/usr/bin/less",
-                    "-R",  # This is for colour
-                    # "-F", # This is for exiting if less than one page, can't use since it blocks less from dumping to stdout
-                    "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
-                ],
-                stdin=subprocess.PIPE,
-                universal_newlines=True,
-                stdout=sys.stdout,
-            )
+            if paging == "auto":
+                proc = subprocess.Popen(
+                    [
+                        "/usr/bin/less",
+                        "-R",  # This is for colour
+                        "-F",  # This is for exiting if less than one page!
+                        "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
+                    ],
+                    stdin=subprocess.PIPE,
+                    universal_newlines=True,
+                    stdout=sys.stdout,
+                )
+            elif paging == "always":
+                proc = subprocess.Popen(
+                    [
+                        "/usr/bin/less",
+                        "-R",  # This is for colour
+                        # "-F", # This is for exiting if less than one page, can't use since it blocks less from dumping to stdout
+                        "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
+                    ],
+                    stdin=subprocess.PIPE,
+                    universal_newlines=True,
+                    stdout=sys.stdout,
+                )
+            else:
+                ValueError("Accepted options for --paging are [auto/never/always]")
 
             def pager_cleanup():
                 try:
@@ -113,7 +128,7 @@ def render_ipynb_jit(
 
         def wrapped_print(text):
             text = Padding(text, (0, 4))
-            if pager:
+            if use_pager:
                 with console.capture() as capture:
                     console.print(text)
 
@@ -195,7 +210,7 @@ def render_ipynb_jit(
 
                 wrapped_print(renderable)
 
-        if pager:
+        if use_pager:
             # Close stdin
             proc.stdin.close()
             # Wait for user to be done w/ the pager
@@ -205,7 +220,7 @@ def render_ipynb_jit(
     except BrokenPipeError:
         # Broken pipe happens if we quit from the pager
         # Doesn't happen if we've scrolled till end though
-        if pager:
+        if use_pager:
             pager_cleanup()
 
     except KeyboardInterrupt:
@@ -216,7 +231,7 @@ def render_ipynb_jit(
         # Print traceback
         traceback.print_exc()
         # Wrapped everything in try-except just to clean up pager exit gracefully
-        if pager:
+        if use_pager:
             pager_cleanup()
 
     return None
@@ -229,8 +244,15 @@ def run():
         # epilog = 'Text at the bottom of help'
     )
     parser.add_argument("filename")
-    parser.add_argument("--pager", action="store_true", default=False)
+    parser.add_argument(
+        "--paging",
+        default="auto",
+        help="Specify when to use the pager [auto/never/always], defaults to auto",
+    )
     args = parser.parse_args()
+
+    if args.paging not in ["auto", "never", "always"]:
+        raise ValueError("Accepted options for --paging are [auto/never/always]")
 
     _ = render_ipynb_jit(
         args.filename,
@@ -242,7 +264,7 @@ def run():
         line_numbers=False,
         guides=False,
         no_wrap=True,
-        pager=args.pager,
+        paging=args.paging,
     )
 
 
