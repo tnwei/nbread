@@ -1,0 +1,21 @@
+[project]
+name = "nbread"
+version = "0.1.0"
+description = "Read Jupyter notebooks from the command line"
+readme = "README.md"
+authors = [{name = "Tan, Nian Wei"}]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta"
+]
+dependencies = [
+    "rich",
+    "pygments"
+]
+
+[project.scripts]
+nbread = "nbread:run"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
