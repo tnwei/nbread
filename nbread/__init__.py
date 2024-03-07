@@ -71,7 +71,6 @@ def render_ipynb_jit(
     tail: Optional[int],
     line_numbers: bool,
     guides: bool,
-    no_wrap: bool,
     paging: str,
 ) -> RenderableType:
     use_pager = True if (paging == "auto") or (paging == "always") else False
@@ -173,7 +172,7 @@ def render_ipynb_jit(
                         theme=theme,
                         line_numbers=line_numbers,
                         indent_guides=guides,
-                        word_wrap=not no_wrap,
+                        word_wrap=True,
                         line_range=line_range,
                     ),
                     border_style="dim",
@@ -263,7 +262,6 @@ def run():
         tail=None,
         line_numbers=False,
         guides=False,
-        no_wrap=True,
         paging=args.paging,
     )
 

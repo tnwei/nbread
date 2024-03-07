@@ -1,6 +1,6 @@
 [project]
 name = "nbread"
-version = "0.1.1"
+version = "0.1.2-dev"
 description = "Read Jupyter notebooks from the command line"
 readme = "README.md"
 authors = [{name = "Tan, Nian Wei"}]
