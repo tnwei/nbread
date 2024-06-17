@@ -1,3 +1,9 @@
+# Changelog
+
+## 0.1.2dev1 (Mar 7, 2024)
+
++ Fixed word wrap in code cells. Closes [Text wrapping for code cells #1](https://github.com/tnwei/nbread/issues/1)
+
 ## 0.1.1 (Mar 7, 2024)
 
 + Changed `--pager` option which toggles on/off pager to `--paging=[auto/never/always]`. Default is auto. Closes [Automatically pipe to pager as required #3](https://github.com/tnwei/nbread/issues/3)

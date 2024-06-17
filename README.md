@@ -1,4 +1,4 @@
-# nb-read
+# nbread
 
 Snappy previews of Jupyter notebooks from the command line, with ranger integration.
 
