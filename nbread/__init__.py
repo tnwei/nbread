@@ -220,22 +220,22 @@ def render_ipynb_jit(
                     renderable = None
 
                     # Handle different MIME types in priority order
-                    if "image/png" in data:
-                        # TODO: Implement image rendering for terminals
-                        # Placeholder for now
-                        renderable = Text("[Image: PNG]", style="dim cyan")
-
-                    elif "image/jpeg" in data:
-                        # TODO: Implement image rendering for terminals
-                        renderable = Text("[Image: JPEG]", style="dim cyan")
-
-                    elif "image/svg+xml" in data:
-                        # TODO: Implement SVG rendering
-                        renderable = Text("[Image: SVG]", style="dim cyan")
-
-                    elif "image/gif" in data:
-                        # TODO: Implement GIF rendering
-                        renderable = Text("[Image: GIF]", style="dim cyan")
+                    if any(mime.startswith("image/") for mime in data):
+                        for image_type in [
+                            "image/png",
+                            "image/jpeg",
+                            "image/svg+xml",
+                            "image/gif",
+                        ]:
+                            if image_type in data:
+                                # TODO: Implement image rendering for terminals
+                                # Placeholder for now
+                                renderable = Text(f"[{image_type}]", style="dim cyan")
+                                break
+                            else:
+                                renderable = Text(
+                                    f"[Unsupported: {image_type}]", style="dim cyan"
+                                )
 
                     elif "text/html" in data:
                         from .mime_text import handle_html_output
