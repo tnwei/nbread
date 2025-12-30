@@ -79,7 +79,7 @@ def render_ipynb_jit(
             # Make sure `less` exists
             if not os.path.exists("/usr/bin/less"):
                 raise FileNotFoundError(
-                    "/usr/bin/less not found, either run with `--pager never` or install `less`"
+                    "/usr/bin/less not found, either run with `--no-pager` or install `less`"
                 )
 
             # Open a subprocess to less
@@ -244,14 +244,14 @@ def run():
     )
     parser.add_argument("filename")
     parser.add_argument(
-        "--paging",
-        default="auto",
-        help="Specify when to use the pager [auto/never/always], defaults to auto",
+        "--no-pager",
+        action="store_true",
+        help="Disable pager and print directly to stdout",
     )
     args = parser.parse_args()
 
-    if args.paging not in ["auto", "never", "always"]:
-        raise ValueError("Accepted options for --paging are [auto/never/always]")
+    # Convert --no-pager flag to paging mode
+    paging = "never" if args.no_pager else "auto"
 
     _ = render_ipynb_jit(
         args.filename,
@@ -262,7 +262,7 @@ def run():
         tail=None,
         line_numbers=False,
         guides=False,
-        paging=args.paging,
+        paging=paging,
     )
 
 
