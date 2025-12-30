@@ -25,7 +25,8 @@ def check_terminal_supports_sixel() -> bool:
 
 def check_sixel_renderer_available() -> bool | SixelRenderer:
     # Checks for chafa
-    result = subprocess.run(["which", "chafa"])
+    # capture_output=True to redir away from stdout when rendering notebook
+    result = subprocess.run(["which", "chafa"], capture_output=True)
     if result.returncode == 0:
         return SixelRenderer.CHAFA
 
