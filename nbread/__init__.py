@@ -74,6 +74,7 @@ def render_ipynb_jit(
     guides: bool,
     use_pager: bool,
     pager_cmd: Optional[str] = None,
+    enable_images: bool = False,
 ) -> RenderableType:
     try:
         if use_pager:
@@ -221,34 +222,39 @@ def render_ipynb_jit(
 
                     # Handle different MIME types in priority order
                     if any(mime.startswith("image/") for mime in data):
-                        for image_type in [
-                            "image/png",
-                            "image/jpeg",
-                            "image/svg+xml",
-                            "image/gif",
-                        ]:
-                            if image_type in data:
-                                from .mime_image import handle_image_output
+                        if enable_images:
+                            for image_type in [
+                                "image/png",
+                                "image/jpeg",
+                                "image/svg+xml",
+                                "image/gif",
+                            ]:
+                                if image_type in data:
+                                    from .mime_image import handle_image_output
 
-                                sixel_data = handle_image_output(
-                                    data[image_type], suffix=image_type.split("/")[1]
-                                )
-                                if sixel_data is None:
-                                    # Print placeholder to acknowledge text
-                                    renderable = Text(
-                                        f"[{image_type}]", style="dim cyan"
+                                    sixel_data = handle_image_output(
+                                        data[image_type], suffix=image_type.split("/")[1]
                                     )
+                                    if sixel_data is None:
+                                        # Print placeholder to acknowledge image
+                                        renderable = Text(
+                                            f"[{image_type}]", style="dim cyan"
+                                        )
+                                    else:
+                                        # Successfully obtained sixel payload, print it
+                                        print(sixel_data, end="")
+                                        renderable = Text("\n")
+
+                                    break
+
                                 else:
-                                    # Successfully obtained sixel payload, print it
-                                    print(sixel_data, end="")
-                                    renderable = Text("\n")
-
-                                break
-
-                            else:
-                                renderable = Text(
-                                    f"[Unsupported: {image_type}]", style="dim cyan"
-                                )
+                                    renderable = Text(
+                                        f"[Unsupported: {image_type}]", style="dim cyan"
+                                    )
+                        else:
+                            # Images disabled by default, show placeholder
+                            image_type = next(mime for mime in data.keys() if mime.startswith("image/"))
+                            renderable = Text(f"[{image_type}]", style="dim cyan")
 
                     elif "text/html" in data:
                         from .mime_text import handle_html_output
@@ -335,16 +341,25 @@ def run():
         action="store_true",
         help="Disable pager and print directly to stdout",
     )
+    parser.add_argument(
+        "--experimental-images",
+        action="store_true",
+        help="Enable experimental Sixel image rendering (disables pager, requires compatible terminal and chafa)",
+    )
     args = parser.parse_args()
 
     # Determine paging behavior following Git's approach:
-    # 1. --no-pager flag takes precedence
-    # 2. $PAGER environment variable (empty string means no paging)
-    # 3. Default to auto with less
+    # 1. --experimental-images flag disables pager (Sixel doesn't work in pagers)
+    # 2. --no-pager flag takes precedence
+    # 3. $PAGER environment variable (empty string means no paging)
+    # 4. Default to auto with less
     pager_cmd = None
     use_pager = True
 
-    if args.no_pager:
+    if args.experimental_images:
+        # Images require direct output
+        use_pager = False
+    elif args.no_pager:
         use_pager = False
     else:
         env_pager = os.environ.get("PAGER")
@@ -366,6 +381,7 @@ def run():
         guides=False,
         use_pager=use_pager,
         pager_cmd=pager_cmd,
+        enable_images=args.experimental_images,
     )
 
 
