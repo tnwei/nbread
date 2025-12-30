@@ -211,30 +211,45 @@ def render_ipynb_jit(
                         # TODO: Implement image rendering for terminals
                         # Placeholder for now
                         renderable = Text("[Image: PNG]", style="dim cyan")
+
                     elif "image/jpeg" in data:
                         # TODO: Implement image rendering for terminals
                         renderable = Text("[Image: JPEG]", style="dim cyan")
+
                     elif "image/svg+xml" in data:
                         # TODO: Implement SVG rendering
                         renderable = Text("[Image: SVG]", style="dim cyan")
+
                     elif "image/gif" in data:
                         # TODO: Implement GIF rendering
                         renderable = Text("[Image: GIF]", style="dim cyan")
+
                     elif "text/html" in data:
-                        # TODO: Could strip HTML tags or render simplified version
-                        renderable = Text("[HTML output]", style="dim yellow")
+                        from .html import handle_html_output
+
+                        renderable, new_line, skip = handle_html_output(
+                            data["text/html"]
+                        )
+                        if skip:
+                            continue
+
                     elif "text/latex" in data:
                         # TODO: Could render LaTeX or show raw source
                         renderable = Text("[LaTeX output]", style="dim magenta")
+
                     elif "text/markdown" in data:
                         # Render markdown directly
                         md_content = data["text/markdown"]
                         if isinstance(md_content, list):
                             md_content = "".join(md_content)
-                        renderable = Markdown(md_content, code_theme=theme, hyperlinks=hyperlinks)
+                        renderable = Markdown(
+                            md_content, code_theme=theme, hyperlinks=hyperlinks
+                        )
+
                     elif "application/json" in data:
                         # TODO: Pretty-print JSON
                         renderable = Text("[JSON output]", style="dim blue")
+
                     elif "text/plain" in data:
                         # Fallback to plain text
                         text_content = data["text/plain"]
@@ -242,10 +257,13 @@ def render_ipynb_jit(
                             renderable = Text.from_ansi("".join(text_content))
                         else:
                             renderable = Text.from_ansi(text_content)
+
                     else:
                         # Unknown MIME type
                         mime_types = ", ".join(data.keys())
-                        renderable = Text(f"[Unsupported output: {mime_types}]", style="dim red")
+                        renderable = Text(
+                            f"[Unsupported output: {mime_types}]", style="dim red"
+                        )
 
                     if renderable:
                         new_line = True
