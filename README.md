@@ -17,14 +17,17 @@ Run `nbread notebook.ipynb` for notebook preview in terminal.
 
 ```bash
 $ nbread --help
-usage: nbread [-h] [--paging PAGING] filename
+usage: nbread [-h] [--no-pager] filename
 
 positional arguments:
   filename
 
 optional arguments:
-  -h, --help       show this help message and exit
-  --paging PAGING  Specify when to use the pager [auto/never/always], defaults to auto
+  -h, --help   show this help message and exit
+  --no-pager   Disable pager and print directly to stdout
+
+Paging: Defaults to 'less' with auto-exit. Override with $PAGER env var or
+disable with --no-pager. Set PAGER='' to disable paging via environment.
 ```
 
 ## Setup
@@ -58,7 +61,7 @@ Enabling fullscreen preview in terminal when a notebook is selected: add the fol
 ```
 ### INSERT START
 # Jupyter notebooks
-ext ipynb  = nbread "$1" --pager
+ext ipynb  = nbread "$1"
 ### INSERT END
 ```
 

@@ -1,4 +1,5 @@
 import argparse
+import shlex
 
 from typing import Optional, Tuple, Any
 import subprocess
@@ -71,44 +72,41 @@ def render_ipynb_jit(
     tail: Optional[int],
     line_numbers: bool,
     guides: bool,
-    paging: str,
+    use_pager: bool,
+    pager_cmd: Optional[str] = None,
 ) -> RenderableType:
-    use_pager = True if (paging == "auto") or (paging == "always") else False
     try:
-        if use_pager is True:
-            # Make sure `less` exists
-            if not os.path.exists("/usr/bin/less"):
-                raise FileNotFoundError(
-                    "/usr/bin/less not found, either run with `--pager never` or install `less`"
-                )
-
-            # Open a subprocess to less
-            if paging == "auto":
+        if use_pager:
+            # Determine which pager to use
+            if pager_cmd is not None:
+                # Use custom pager from $PAGER
+                pager_parts = shlex.split(pager_cmd)
                 proc = subprocess.Popen(
-                    [
-                        "/usr/bin/less",
-                        "-R",  # This is for colour
-                        "-F",  # This is for exiting if less than one page!
-                        "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
-                    ],
-                    stdin=subprocess.PIPE,
-                    universal_newlines=True,
-                    stdout=sys.stdout,
-                )
-            elif paging == "always":
-                proc = subprocess.Popen(
-                    [
-                        "/usr/bin/less",
-                        "-R",  # This is for colour
-                        # "-F", # This is for exiting if less than one page, can't use since it blocks less from dumping to stdout
-                        "-K",  # This is for clecan exit if Ctrl-C is called instead of exiting the colon (:) menu
-                    ],
+                    pager_parts,
                     stdin=subprocess.PIPE,
                     universal_newlines=True,
                     stdout=sys.stdout,
                 )
             else:
-                ValueError("Accepted options for --paging are [auto/never/always]")
+                # Use default less with our preferred flags
+                # Make sure `less` exists
+                if not os.path.exists("/usr/bin/less"):
+                    raise FileNotFoundError(
+                        "/usr/bin/less not found, either run with `--no-pager` or install `less`"
+                    )
+
+                # Open a subprocess to less with auto-exit if content fits on screen
+                proc = subprocess.Popen(
+                    [
+                        "/usr/bin/less",
+                        "-R",  # Enable color output
+                        "-F",  # Auto-exit if less than one page
+                        "-K",  # Clean exit on Ctrl-C
+                    ],
+                    stdin=subprocess.PIPE,
+                    universal_newlines=True,
+                    stdout=sys.stdout,
+                )
 
             def pager_cleanup():
                 try:
@@ -238,20 +236,34 @@ def render_ipynb_jit(
 
 def run():
     parser = argparse.ArgumentParser(
-        # prog = 'ProgramName',
-        # description = 'What the program does',
-        # epilog = 'Text at the bottom of help'
+        description="Snappy previews of Jupyter notebooks from the command line",
+        epilog="Paging: Defaults to 'less' with auto-exit. Override with $PAGER env var or disable with --no-pager. Set PAGER='' to disable paging via environment.",
     )
     parser.add_argument("filename")
     parser.add_argument(
-        "--paging",
-        default="auto",
-        help="Specify when to use the pager [auto/never/always], defaults to auto",
+        "--no-pager",
+        action="store_true",
+        help="Disable pager and print directly to stdout",
     )
     args = parser.parse_args()
 
-    if args.paging not in ["auto", "never", "always"]:
-        raise ValueError("Accepted options for --paging are [auto/never/always]")
+    # Determine paging behavior following Git's approach:
+    # 1. --no-pager flag takes precedence
+    # 2. $PAGER environment variable (empty string means no paging)
+    # 3. Default to auto with less
+    pager_cmd = None
+    use_pager = True
+
+    if args.no_pager:
+        use_pager = False
+    else:
+        env_pager = os.environ.get("PAGER")
+        if env_pager == "":
+            # Empty string explicitly disables paging
+            use_pager = False
+        elif env_pager is not None:
+            # Use the custom pager
+            pager_cmd = env_pager
 
     _ = render_ipynb_jit(
         args.filename,
@@ -262,7 +274,8 @@ def run():
         tail=None,
         line_numbers=False,
         guides=False,
-        paging=args.paging,
+        use_pager=use_pager,
+        pager_cmd=pager_cmd,
     )
 
 
