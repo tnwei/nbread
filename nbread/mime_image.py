@@ -32,7 +32,7 @@ def check_sixel_renderer_available() -> bool | SixelRenderer:
     return False
 
 
-def render_sixel_chafa(image_data: str, suffix: str) -> bytes | None:
+def render_sixel_chafa(image_data: str, suffix: str) -> str | None:
     # Dump to tempfile
     decoded = base64.b64decode(image_data)
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
@@ -46,7 +46,7 @@ def render_sixel_chafa(image_data: str, suffix: str) -> bytes | None:
             ["chafa", "--format=sixel", tmp_path], capture_output=True
         )
         if result.returncode == 0:
-            sixel_data = result.stdout
+            sixel_data = result.stdout.decode('latin-1')
         else:
             sixel_data = None
     finally:
@@ -55,7 +55,7 @@ def render_sixel_chafa(image_data: str, suffix: str) -> bytes | None:
     return sixel_data
 
 
-def handle_image_output(image_data: str, suffix: str) -> bytes | None:
+def handle_image_output(image_data: str, suffix: str) -> str | None:
     if not check_terminal_supports_sixel():
         return None
 
