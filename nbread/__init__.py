@@ -255,6 +255,10 @@ def render_ipynb_jit(
                             json.dumps(data["application/json"]), style="dim blue"
                         )
 
+                    elif "application/javascript" in data:
+                        # JavaScript can't be executed in terminal
+                        renderable = Text("[JavaScript output]", style="dim cyan")
+
                     elif "text/plain" in data:
                         from .mime_text import handle_plain_output
 
