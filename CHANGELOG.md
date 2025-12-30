@@ -3,6 +3,7 @@
 ## Unreleased
 
 + Update `--paging` option to `--no-pager` and honor $PAGER to be more Unix-like
++ Print placeholders for non-text cell output (images and javascript), pretty prints specific text types (latex, json, html)
 
 ## 0.1.2dev1 (Mar 7, 2024)
 
