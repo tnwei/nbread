@@ -234,8 +234,11 @@ def render_ipynb_jit(
                             continue
 
                     elif "text/latex" in data:
-                        # TODO: Could render LaTeX or show raw source
-                        renderable = Text("[LaTeX output]", style="dim magenta")
+                        # Show raw LaTeX source for now
+                        latex_content = data["text/latex"]
+                        if isinstance(latex_content, list):
+                            latex_content = "[LaTeX output]\n" + "".join(latex_content)
+                        renderable = Text(latex_content, style="dim magenta")
 
                     elif "text/markdown" in data:
                         # Render markdown directly
