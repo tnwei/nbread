@@ -1,4 +1,6 @@
 import os
+import base64
+import tempfile
 import subprocess
 from enum import Enum
 
@@ -30,11 +32,30 @@ def check_sixel_renderer_available() -> bool | SixelRenderer:
     return False
 
 
-def render_sixel_chafa(image_data: str) -> bytes:
-    return b"placeholder-text-to-print"
+def render_sixel_chafa(image_data: str, suffix: str) -> bytes | None:
+    # Dump to tempfile
+    decoded = base64.b64decode(image_data)
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(decoded)
+        tmp_path = tmp.name
+
+    # Specify sixel_data in advance incase try blocks fails
+    sixel_data = None
+    try:
+        result = subprocess.run(
+            ["chafa", "--format=sixel", tmp_path], capture_output=True
+        )
+        if result.returncode == 0:
+            sixel_data = result.stdout
+        else:
+            sixel_data = None
+    finally:
+        os.unlink(tmp_path)
+
+    return sixel_data
 
 
-def handle_image_output(image_data: str) -> bytes | None:
+def handle_image_output(image_data: str, suffix: str) -> bytes | None:
     if not check_terminal_supports_sixel():
         return None
 
@@ -45,7 +66,8 @@ def handle_image_output(image_data: str) -> bytes | None:
 
     else:
         if renderer == SixelRenderer.CHAFA:
-            return render_sixel_chafa(image_data)
+            sixel_data = render_sixel_chafa(image_data, suffix)
+            return sixel_data
         else:
             # Not implemented yet!
             return None

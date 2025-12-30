@@ -230,7 +230,9 @@ def render_ipynb_jit(
                             if image_type in data:
                                 from .mime_image import handle_image_output
 
-                                sixel_data = handle_image_output(data[image_type])
+                                sixel_data = handle_image_output(
+                                    data[image_type], suffix=image_type.split("/")[1]
+                                )
                                 if sixel_data is None:
                                     # Print placeholder to acknowledge text
                                     renderable = Text(
