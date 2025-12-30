@@ -138,7 +138,6 @@ def render_ipynb_jit(
         import json
         from rich.syntax import Syntax
         from rich.console import Group
-        from rich.panel import Panel
 
         notebook_str = read_resource(resource)
         notebook_dict = json.loads(notebook_str)
@@ -153,18 +152,20 @@ def render_ipynb_jit(
             if new_line:
                 wrapped_print("")
 
-            if "execution_count" in cell:
-                execution_count = cell["execution_count"] or " "
-                wrapped_print(
-                    f"[green]In [[#66ff00]{execution_count}[/#66ff00]]:[/green]"
-                )
-
             source = "".join(cell["source"])
 
             if cell["cell_type"] == "code":
                 num_lines = len(source.splitlines())
                 line_range = _line_range(head, tail, num_lines)
-                renderable = Panel(
+
+                # Create labeled separator
+                execution_count = cell.get("execution_count", " ") or " "
+                label = f"── Code [{execution_count}] "
+                separator_width = console.width - 8 - len(label)
+                separator = Text(label + "─" * separator_width, style="dim")
+
+                renderable = Group(
+                    separator,
                     Syntax(
                         source,
                         lexer,
@@ -174,7 +175,6 @@ def render_ipynb_jit(
                         word_wrap=True,
                         line_range=line_range,
                     ),
-                    border_style="dim",
                 )
             elif cell["cell_type"] == "markdown":
                 renderable = Markdown(source, code_theme=theme, hyperlinks=hyperlinks)
@@ -190,7 +190,12 @@ def render_ipynb_jit(
                 output_type = output["output_type"]
 
                 if output_type == "stream":
-                    renderable = Text.from_ansi("".join(output["text"]))
+                    execution_count = cell.get("execution_count", " ") or " "
+                    renderable = Text.from_markup(
+                        f"\n[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
+                    )
+                    renderable += Text.from_ansi("".join(output["text"]))
+                    renderable += Text("\n")
                     new_line = False
 
                 elif output_type == "error":
@@ -200,13 +205,14 @@ def render_ipynb_jit(
                 elif output_type == "execute_result":
                     execution_count = output.get("execution_count", " ") or " "
                     renderable = Text.from_markup(
-                        f"[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
+                        f"\n[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
                     )
                     data = output["data"].get("text/plain", "")
                     if isinstance(data, list):
                         renderable += Text.from_ansi("".join(data))
                     else:
                         renderable += Text.from_ansi(data)
+                    renderable += Text("\n")
                     new_line = True
 
                 elif output_type == "display_data":
