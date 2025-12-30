@@ -247,8 +247,11 @@ def render_ipynb_jit(
                         )
 
                     elif "application/json" in data:
-                        # TODO: Pretty-print JSON
-                        renderable = Text("[JSON output]", style="dim blue")
+                        import json
+
+                        renderable = Text(
+                            json.dumps(data["application/json"]), style="dim blue"
+                        )
 
                     elif "text/plain" in data:
                         # Fallback to plain text
