@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-+ Update `--paging` option to `--no-pager` to be more Unix-like
++ Update `--paging` option to `--no-pager` and honor $PAGER to be more Unix-like
 
 ## 0.1.2dev1 (Mar 7, 2024)
 
