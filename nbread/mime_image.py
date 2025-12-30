@@ -1,5 +1,10 @@
 import os
 import subprocess
+from enum import Enum
+
+
+class SixelRenderer(Enum):
+    CHAFA = "chafa"
 
 
 def check_terminal_supports_sixel() -> bool:
@@ -16,25 +21,31 @@ def check_terminal_supports_sixel() -> bool:
     return False
 
 
-def check_sixel_renderer_available() -> bool | str:
+def check_sixel_renderer_available() -> bool | SixelRenderer:
     # Checks for chafa
     result = subprocess.run(["which", "chafa"])
     if result.returncode == 0:
-        fpath = result.stdout.decode("ascii").strip()
-        return fpath
+        return SixelRenderer.CHAFA
 
     return False
+
+
+def render_sixel_chafa(image_data: str) -> bytes:
+    return b"placeholder-text-to-print"
 
 
 def handle_image_output(image_data: str) -> bytes | None:
     if not check_terminal_supports_sixel():
         return None
 
-    sixel_exec_path = check_sixel_renderer_available()
+    renderer = check_sixel_renderer_available()
 
-    if bool(sixel_exec_path) is False:
+    if renderer is False:
         return None
 
     else:
-        # TODO: Sixel rendering code
-        return b"placeholder-text-to-print"
+        if renderer == SixelRenderer.CHAFA:
+            return render_sixel_chafa(image_data)
+        else:
+            # Not implemented yet!
+            return None
