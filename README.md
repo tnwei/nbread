@@ -25,6 +25,9 @@ positional arguments:
 optional arguments:
   -h, --help   show this help message and exit
   --no-pager   Disable pager and print directly to stdout
+
+Paging: Defaults to 'less' with auto-exit. Override with $PAGER env var or
+disable with --no-pager. Set PAGER='' to disable paging via environment.
 ```
 
 ## Setup
