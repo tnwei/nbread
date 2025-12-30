@@ -10,7 +10,8 @@ classifiers = [
 ]
 dependencies = [
     "rich",
-    "pygments"
+    "pygments",
+    "html2text>=2025.4.15",
 ]
 
 [project.scripts]
