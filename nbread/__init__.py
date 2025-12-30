@@ -228,10 +228,21 @@ def render_ipynb_jit(
                             "image/gif",
                         ]:
                             if image_type in data:
-                                # TODO: Implement image rendering for terminals
-                                # Placeholder for now
-                                renderable = Text(f"[{image_type}]", style="dim cyan")
+                                from .mime_image import handle_image_output
+
+                                sixel_data = handle_image_output(data[image_type])
+                                if sixel_data is None:
+                                    # Print placeholder to acknowledge text
+                                    renderable = Text(
+                                        f"[{image_type}]", style="dim cyan"
+                                    )
+                                else:
+                                    # Successfully obtained sixel payload, print it
+                                    print(sixel_data, end="")
+                                    renderable = Text("\n")
+
                                 break
+
                             else:
                                 renderable = Text(
                                     f"[Unsupported: {image_type}]", style="dim cyan"
