@@ -160,6 +160,7 @@ def render_ipynb_jit(
                 )
 
             source = "".join(cell["source"])
+
             if cell["cell_type"] == "code":
                 num_lines = len(source.splitlines())
                 line_range = _line_range(head, tail, num_lines)
@@ -177,20 +178,25 @@ def render_ipynb_jit(
                 )
             elif cell["cell_type"] == "markdown":
                 renderable = Markdown(source, code_theme=theme, hyperlinks=hyperlinks)
+
             else:
                 renderable = Text(source)
+
             new_line = True
 
             wrapped_print(renderable)
 
             for output in cell.get("outputs", []):
                 output_type = output["output_type"]
+
                 if output_type == "stream":
                     renderable = Text.from_ansi("".join(output["text"]))
                     new_line = False
+
                 elif output_type == "error":
                     renderable = Text.from_ansi("\n".join(output["traceback"]).rstrip())
                     new_line = True
+
                 elif output_type == "execute_result":
                     execution_count = output.get("execution_count", " ") or " "
                     renderable = Text.from_markup(
@@ -202,6 +208,71 @@ def render_ipynb_jit(
                     else:
                         renderable += Text.from_ansi(data)
                     new_line = True
+
+                elif output_type == "display_data":
+                    data = output.get("data", {})
+                    renderable = None
+
+                    # Handle different MIME types in priority order
+                    if "image/png" in data:
+                        # TODO: Implement image rendering for terminals
+                        # Placeholder for now
+                        renderable = Text("[Image: PNG]", style="dim cyan")
+
+                    elif "image/jpeg" in data:
+                        # TODO: Implement image rendering for terminals
+                        renderable = Text("[Image: JPEG]", style="dim cyan")
+
+                    elif "image/svg+xml" in data:
+                        # TODO: Implement SVG rendering
+                        renderable = Text("[Image: SVG]", style="dim cyan")
+
+                    elif "image/gif" in data:
+                        # TODO: Implement GIF rendering
+                        renderable = Text("[Image: GIF]", style="dim cyan")
+
+                    elif "text/html" in data:
+                        from .mime_text import handle_html_output
+
+                        renderable = handle_html_output(data["text/html"])
+
+                    elif "text/latex" in data:
+                        from .mime_text import handle_latex_output
+
+                        renderable = handle_latex_output(data["text/latex"])
+
+                    elif "text/markdown" in data:
+                        from .mime_text import handle_markdown_output
+
+                        renderable = handle_markdown_output(
+                            data["text/markdown"], theme=theme, hyperlinks=hyperlinks
+                        )
+
+                    elif "application/json" in data:
+                        import json
+
+                        renderable = Text(
+                            json.dumps(data["application/json"]), style="dim blue"
+                        )
+
+                    elif "application/javascript" in data:
+                        # JavaScript can't be executed in terminal
+                        renderable = Text("[JavaScript output]", style="dim cyan")
+
+                    elif "text/plain" in data:
+                        from .mime_text import handle_plain_output
+
+                        renderable = handle_plain_output(data["text/plain"])
+
+                    else:
+                        # Unknown MIME type
+                        mime_types = ", ".join(data.keys())
+                        renderable = Text(
+                            f"[Unsupported output: {mime_types}]", style="dim red"
+                        )
+
+                    if renderable:
+                        new_line = True
                 else:
                     continue
 
