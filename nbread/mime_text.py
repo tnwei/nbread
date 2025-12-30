@@ -1,8 +1,10 @@
+from typing import Any
 from rich.markdown import Markdown
-import html2text
 
 
 def handle_html_output(html_data: str) -> tuple[Any, bool, bool]:
+    import html2text
+
     if isinstance(html_data, list):
         html_data = "".join(html_data)
 

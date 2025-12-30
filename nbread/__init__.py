@@ -225,7 +225,7 @@ def render_ipynb_jit(
                         renderable = Text("[Image: GIF]", style="dim cyan")
 
                     elif "text/html" in data:
-                        from .html import handle_html_output
+                        from .mime_text import handle_html_output
 
                         renderable, new_line, skip = handle_html_output(
                             data["text/html"]
