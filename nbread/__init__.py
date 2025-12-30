@@ -72,10 +72,9 @@ def render_ipynb_jit(
     tail: Optional[int],
     line_numbers: bool,
     guides: bool,
-    paging: str,
+    use_pager: bool,
     pager_cmd: Optional[str] = None,
 ) -> RenderableType:
-    use_pager = paging == "auto"
     try:
         if use_pager:
             # Determine which pager to use
@@ -253,21 +252,18 @@ def run():
     # 2. $PAGER environment variable (empty string means no paging)
     # 3. Default to auto with less
     pager_cmd = None
+    use_pager = True
 
     if args.no_pager:
-        paging = "never"
+        use_pager = False
     else:
         env_pager = os.environ.get("PAGER")
         if env_pager == "":
             # Empty string explicitly disables paging
-            paging = "never"
+            use_pager = False
         elif env_pager is not None:
             # Use the custom pager
-            paging = "auto"
             pager_cmd = env_pager
-        else:
-            # Default: auto with built-in less
-            paging = "auto"
 
     _ = render_ipynb_jit(
         args.filename,
@@ -278,7 +274,7 @@ def run():
         tail=None,
         line_numbers=False,
         guides=False,
-        paging=paging,
+        use_pager=use_pager,
         pager_cmd=pager_cmd,
     )
 
