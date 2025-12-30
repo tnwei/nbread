@@ -227,26 +227,18 @@ def render_ipynb_jit(
                     elif "text/html" in data:
                         from .mime_text import handle_html_output
 
-                        renderable, new_line, skip = handle_html_output(
-                            data["text/html"]
-                        )
-                        if skip:
-                            continue
+                        renderable = handle_html_output(data["text/html"])
 
                     elif "text/latex" in data:
-                        # Show raw LaTeX source for now
-                        latex_content = data["text/latex"]
-                        if isinstance(latex_content, list):
-                            latex_content = "[LaTeX output]\n" + "".join(latex_content)
-                        renderable = Text(latex_content, style="dim magenta")
+                        from .mime_text import handle_latex_output
+
+                        renderable = handle_latex_output(data["text/latex"])
 
                     elif "text/markdown" in data:
-                        # Render markdown directly
-                        md_content = data["text/markdown"]
-                        if isinstance(md_content, list):
-                            md_content = "".join(md_content)
-                        renderable = Markdown(
-                            md_content, code_theme=theme, hyperlinks=hyperlinks
+                        from .mime_text import handle_markdown_output
+
+                        renderable = handle_markdown_output(
+                            data["text/markdown"], theme=theme, hyperlinks=hyperlinks
                         )
 
                     elif "application/json" in data:
@@ -257,12 +249,9 @@ def render_ipynb_jit(
                         )
 
                     elif "text/plain" in data:
-                        # Fallback to plain text
-                        text_content = data["text/plain"]
-                        if isinstance(text_content, list):
-                            renderable = Text.from_ansi("".join(text_content))
-                        else:
-                            renderable = Text.from_ansi(text_content)
+                        from .mime_text import handle_plain_output
+
+                        renderable = handle_plain_output(data["text/plain"])
 
                     else:
                         # Unknown MIME type

@@ -1,8 +1,8 @@
-from typing import Any
-from rich.markdown import Markdown
+from rich.markdown import Markdown, Text
+from rich.console import RenderableType
 
 
-def handle_html_output(html_data: str) -> tuple[Any, bool, bool]:
+def handle_html_output(html_data: str) -> RenderableType:
     import html2text
 
     if isinstance(html_data, list):
@@ -14,7 +14,29 @@ def handle_html_output(html_data: str) -> tuple[Any, bool, bool]:
     markdown_text = h.handle(html_data)
 
     # Return as Rich Markdown renderable
-    renderable = Markdown(markdown_text, hyperlinks=False)
+    return Markdown(markdown_text, hyperlinks=False)
 
-    # renderable, new_line, skip
-    return renderable, True, False
+
+def handle_latex_output(latex_content: str) -> RenderableType:
+    # Show raw LaTeX source for now
+    if isinstance(latex_content, list):
+        latex_content = "[LaTeX output]\n" + "".join(latex_content)
+    return Text(latex_content, style="dim magenta")
+
+
+def handle_markdown_output(
+    md_content: str, theme: str, hyperlinks: bool
+) -> RenderableType:
+    # Render markdown directly
+    if isinstance(md_content, list):
+        md_content = "".join(md_content)
+
+    return Markdown(md_content, code_theme=theme, hyperlinks=hyperlinks)
+
+
+def handle_plain_output(text_content: str) -> RenderableType:
+    # Fallback to plain text
+    if isinstance(text_content, list):
+        return Text.from_ansi("".join(text_content))
+    else:
+        return Text.from_ansi(text_content)
