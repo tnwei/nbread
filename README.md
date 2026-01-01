@@ -1,6 +1,6 @@
 # nbread
 
-Snappy previews of Jupyter notebooks from the command line, with ranger integration.
+Snappy previews of Jupyter notebooks from the command line
 
 <p align="center">
   <img width="800" src="https://raw.githubusercontent.com/tnwei/nbread/main/nbread-cast.svg">
@@ -13,7 +13,7 @@ Snappy previews of Jupyter notebooks from the command line, with ranger integrat
 
 ## Usage
 
-Run `nbread notebook.ipynb` for notebook preview in terminal. 
+Run `nbread notebook.ipynb` for notebook preview in terminal.
 
 ```bash
 $ nbread --help
@@ -32,12 +32,16 @@ Paging: Defaults to 'less' with auto-exit. Override with $PAGER env var or
 disable with --no-pager. Set PAGER='' to disable paging via environment.
 ```
 
+Try it out with the notebooks bundled in `tests/`!
+
 ### Experimental: Image Support
 
-nbread supports rendering images in notebooks using Sixel graphics. This feature is experimental and requires:
+![](docs/sixel.png)
 
-- A Sixel-compatible terminal (e.g., `xterm`, `mlterm`, `foot`, `wezterm`, `konsole`, `contour`)
-- `chafa` installed (install via your package manager: `sudo apt install chafa`, `brew install chafa`, etc.)
+`nbread` supports rendering images in notebooks using Sixel graphics. This feature is experimental and requires:
+
+- A Sixel-compatible terminal (e.g., `xterm`, `mlterm`, `foot`, `wezterm`, `konsole`, `contour`). Check [Are We Sixel Yet](https://www.arewesixelyet.com/) for a latest up-to-date list
+- `chafa` installed (install via your package manager: `sudo apt install chafa`, `brew install chafa`, `sudo dnf install chafa` etc.)
 
 To enable image rendering:
 
@@ -49,42 +53,21 @@ nbread --experimental-images notebook.ipynb
 
 ## Setup
 
-Installation: `pipx install git+https://github.com/tnwei/nbread`. 
+One of the following:
 
-## Ranger integration
+`pip install git+https://github.com/tnwei/nbread`
 
-Use `ranger` as normal, and see Jupyter notebook previews in place of the underlying JSON plain text!
+`pipx install git+https://github/com/tnwei/nbread`
 
-Do the following for `ranger` integration:
+`uv tool install git+https://github/com/tnwei/nbread`
 
-If your `~/.config/ranger/` dir is empty, run `ranger --copy-config=all` to populate it w/ the defaults.
+## Integrations
 
-Enabling panel preview when a notebook is highlighted: modify `handle_extension()` in `~/.config/ranger/scope.sh`:
+- [ranger](docs/ranger.md)
+- [lf](docs/lf.md)
+- [pistol](docs/pistol.md)
 
-```bash
-handle_extension(){
-    case "${FILE_EXTENSION_LOWER}" in
-        ### INSERT START
-        ipynb)
-        ¦   # Jupyter notebook previewer
-            nbread "${FILE_PATH}" && { dump | trim; exit 5; } || exit 2;;
-        ### INSERT END
-
-        # Archive extensions:
-```
-
-Enabling fullscreen preview in terminal when a notebook is selected: add the following to `~/.config/ranger/rifle.conf`:
-
-```
-### INSERT START
-# Jupyter notebooks
-ext ipynb  = nbread "$1"
-### INSERT END
-```
-
-Last tested on ranger 1.9.3, requires `less` installed.
 
 ## Appreciation
 
-Code heavily based on [Textualize/rich-cli](https://github.com/Textualize/rich-cli)'s notebook pretty printing. This is pretty much `rich <notebook.ipynb>` with some speed tweaks and standalone packaging for convenience.
-
+Code heavily based on [Textualize/rich-cli](https://github.com/Textualize/rich-cli)'s notebook pretty printing.
