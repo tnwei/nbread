@@ -186,15 +186,34 @@ def render_ipynb_jit(
 
             wrapped_print(renderable)
 
+            # Track if we've printed the Out[] label for this cell
+            printed_out_label = False
+
             for output in cell.get("outputs", []):
                 output_type = output["output_type"]
 
-                if output_type == "stream":
+                # Print Out[X] label once before first output
+                # NOTE: In Jupyter GUI/nbformat convention, Out[X] should only appear
+                # for execute_result outputs (the return value of the last expression).
+                # Stream outputs (print statements), errors, and display_data don't get
+                # the Out[] label in the GUI. However, for terminal readability, we
+                # intentionally show Out[X] once per cell's output section to provide
+                # clear visual separation between code and outputs, regardless of type.
+                if not printed_out_label and output_type in [
+                    "stream",
+                    "error",
+                    "execute_result",
+                    "display_data",
+                ]:
                     execution_count = cell.get("execution_count", " ") or " "
-                    renderable = Text.from_markup(
+                    out_label = Text.from_markup(
                         f"\n[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
                     )
-                    renderable += Text.from_ansi("".join(output["text"]))
+                    wrapped_print(out_label)
+                    printed_out_label = True
+
+                if output_type == "stream":
+                    renderable = Text.from_ansi("".join(output["text"]))
                     renderable += Text("\n")
                     new_line = False
 
@@ -203,15 +222,11 @@ def render_ipynb_jit(
                     new_line = True
 
                 elif output_type == "execute_result":
-                    execution_count = output.get("execution_count", " ") or " "
-                    renderable = Text.from_markup(
-                        f"\n[red]Out[[#ee4b2b]{execution_count}[/#ee4b2b]]:[/red]\n"
-                    )
                     data = output["data"].get("text/plain", "")
                     if isinstance(data, list):
-                        renderable += Text.from_ansi("".join(data))
+                        renderable = Text.from_ansi("".join(data))
                     else:
-                        renderable += Text.from_ansi(data)
+                        renderable = Text.from_ansi(data)
                     renderable += Text("\n")
                     new_line = True
 
