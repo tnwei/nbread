@@ -36,6 +36,8 @@ Try it out with the notebooks bundled in `tests/`!
 
 ### Experimental: Image Support
 
+![](docs/sixel.png)
+
 `nbread` supports rendering images in notebooks using Sixel graphics. This feature is experimental and requires:
 
 - A Sixel-compatible terminal (e.g., `xterm`, `mlterm`, `foot`, `wezterm`, `konsole`, `contour`). Check [Are We Sixel Yet](https://www.arewesixelyet.com/) for a latest up-to-date list
