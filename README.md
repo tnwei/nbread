@@ -63,6 +63,7 @@ One of the following:
 
 - [ranger](docs/ranger.md)
 - [lf](docs/lf.md)
+- [pistol](docs/pistol.md)
 
 
 ## Appreciation
