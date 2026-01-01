@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-nbread = "nbread:run"
+nbread = "nbread.cli:run"
 
 [build-system]
 requires = ["setuptools"]
