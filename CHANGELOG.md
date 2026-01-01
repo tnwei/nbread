@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (Jan 1, 2026)
 
-+ Update `--paging` option to `--no-pager` and honor $PAGER to be more Unix-like
-+ Print placeholders for non-text cell output (images and javascript), pretty prints specific text types (latex, json, html)
-+ Remove cell borders to be copy-paste friendly
-+ Show images with sixel using --experimental-images
++ Update `--paging` option to `--no-pager` and honor $PAGER to be more Unix-like (#6)
++ Print placeholders for non-text cell output (images and javascript), pretty prints specific text types (latex, json, html) (#7)
++ Remove cell borders to be copy-paste friendly (#8)
++ Show images with sixel using --experimental-images (#9)
 
 ## 0.1.2dev1 (Mar 7, 2024)
 
