@@ -38,6 +38,76 @@ class CodeBlock(TextElement):
 Markdown.elements["code_block"] = CodeBlock
 
 
+class OutputWriter:
+    """Context manager for writing output either to a pager or directly to console."""
+
+    def __init__(self, use_pager: bool, pager_cmd: Optional[str] = None):
+        self.use_pager = use_pager
+        self.proc = None
+        self.pager_cmd = pager_cmd
+
+    def __enter__(self):
+        if self.use_pager:
+            # Determine which pager to use
+            if self.pager_cmd is not None:
+                # Use custom pager from $PAGER
+                pager_parts = shlex.split(self.pager_cmd)
+                self.proc = subprocess.Popen(
+                    pager_parts,
+                    stdin=subprocess.PIPE,
+                    universal_newlines=True,
+                    stdout=sys.stdout,
+                )
+            else:
+                # Use default less with our preferred flags
+                # Make sure `less` exists
+                if not os.path.exists("/usr/bin/less"):
+                    raise FileNotFoundError(
+                        "/usr/bin/less not found, either run with `--no-pager` or install `less`"
+                    )
+
+                # Open a subprocess to less with auto-exit if content fits on screen
+                self.proc = subprocess.Popen(
+                    [
+                        "/usr/bin/less",
+                        "-R",  # Enable color output
+                        "-F",  # Auto-exit if less than one page
+                        "-K",  # Clean exit on Ctrl-C
+                    ],
+                    stdin=subprocess.PIPE,
+                    universal_newlines=True,
+                    stdout=sys.stdout,
+                )
+        return self
+
+    def write(self, renderable: RenderableType, console: Console):
+        """Write renderable to either pager or console."""
+        if self.use_pager:
+            # Capture and pipe to pager
+            with console.capture() as capture:
+                console.print(renderable)
+            captured_text = capture.get()
+            self.proc.stdin.write(captured_text)
+            self.proc.stdin.flush()
+        else:
+            # Direct print to console
+            console.print(renderable)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.use_pager and self.proc:
+            try:
+                # Diving into the intricacies of how this works isn't what I had in mind
+                # Just gonna follow codein std lib
+                # ref: https://github.com/python/cpython/blob/b1e314ab9f8c3a2b53c7179674811f9c79328ce7/Lib/subprocess.py#L1039
+                self.proc.stdin.close()
+            except OSError:
+                pass
+
+            if self.proc.poll() is None:
+                self.proc.terminate()
+                self.proc.wait()
+
+
 def read_resource(path):
     with open(path, "rt", encoding="utf8", errors="replace") as resource_file:
         text = resource_file.read()
