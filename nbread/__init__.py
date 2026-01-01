@@ -1,17 +1,16 @@
 import argparse
+import os
 import shlex
-
-from typing import Optional, Tuple, Any
 import subprocess
 import sys
-import os
 import traceback
+from typing import Any, Optional, Tuple
 
-from rich.console import Console, ConsoleOptions, RenderResult, RenderableType
+from rich.console import Console, ConsoleOptions, RenderableType, RenderResult
 from rich.markdown import Markdown, TextElement
+from rich.markup import escape
 from rich.padding import Padding
 from rich.syntax import Syntax
-from rich.markup import escape
 from rich.text import Text
 
 
@@ -125,7 +124,6 @@ def render_ipynb_jit(
         console = Console(color_system="auto")
 
         def wrapped_print(text):
-            text = Padding(text, (0, 4))
             if use_pager:
                 with console.capture() as capture:
                     console.print(text)
@@ -137,8 +135,9 @@ def render_ipynb_jit(
                 console.print(text)
 
         import json
-        from rich.syntax import Syntax
+
         from rich.console import Group
+        from rich.syntax import Syntax
 
         notebook_str = read_resource(resource)
         notebook_dict = json.loads(notebook_str)
@@ -233,7 +232,8 @@ def render_ipynb_jit(
                                     from .mime_image import handle_image_output
 
                                     sixel_data = handle_image_output(
-                                        data[image_type], suffix=image_type.split("/")[1]
+                                        data[image_type],
+                                        suffix=image_type.split("/")[1],
                                     )
                                     if sixel_data is None:
                                         # Print placeholder to acknowledge image
@@ -253,7 +253,11 @@ def render_ipynb_jit(
                                     )
                         else:
                             # Images disabled by default, show placeholder
-                            image_type = next(mime for mime in data.keys() if mime.startswith("image/"))
+                            image_type = next(
+                                mime
+                                for mime in data.keys()
+                                if mime.startswith("image/")
+                            )
                             renderable = Text(f"[{image_type}]", style="dim cyan")
 
                     elif "text/html" in data:
