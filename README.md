@@ -17,18 +17,35 @@ Run `nbread notebook.ipynb` for notebook preview in terminal.
 
 ```bash
 $ nbread --help
-usage: nbread [-h] [--no-pager] filename
+usage: nbread [-h] [--no-pager] [--experimental-images] filename
 
 positional arguments:
   filename
 
 optional arguments:
-  -h, --help   show this help message and exit
-  --no-pager   Disable pager and print directly to stdout
+  -h, --help              show this help message and exit
+  --no-pager              Disable pager and print directly to stdout
+  --experimental-images   Enable experimental Sixel image rendering (disables pager,
+                          requires compatible terminal and chafa)
 
 Paging: Defaults to 'less' with auto-exit. Override with $PAGER env var or
 disable with --no-pager. Set PAGER='' to disable paging via environment.
 ```
+
+### Experimental: Image Support
+
+nbread supports rendering images in notebooks using Sixel graphics. This feature is experimental and requires:
+
+- A Sixel-compatible terminal (e.g., `xterm`, `mlterm`, `foot`, `wezterm`, `konsole`, `contour`)
+- `chafa` installed (install via your package manager: `sudo apt install chafa`, `brew install chafa`, etc.)
+
+To enable image rendering:
+
+```bash
+nbread --experimental-images notebook.ipynb
+```
+
+**Note:** The `--experimental-images` flag automatically disables the pager since Sixel graphics don't work correctly in pagers. For notebooks with images, you'll see the full output printed directly to your terminal.
 
 ## Setup
 
