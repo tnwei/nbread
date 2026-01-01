@@ -11,5 +11,4 @@ contrib=contrib-title-conventional-commits
 
 [contrib-title-conventional-commits]
 # Specify allowed commit types. For details see: https://www.conventionalcommits.org/
-types = feat, fix, chore, docs, test, refactor, update, merge, explore
-
+types = feat, fix, chore, docs, test, refactor, update, merge, explore, style
